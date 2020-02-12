@@ -274,7 +274,7 @@ Vector3 parseVector3(const char* text, const char separator)
 			strncpy(num, start, current - start);
 			num[current - start] = '\0';
 			start = current + 1;
-			if (num[0] != 'x') //?
+			if (num[0] != 'x') //¿?
 				switch(pos)
 				{
 					case 0: result.x = (float)atof(num); break;
