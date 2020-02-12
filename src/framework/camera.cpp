@@ -82,8 +82,8 @@ void Camera::updateProjectionMatrix()
 	projection_matrix.M[0][0] = f / this->aspect;
 	projection_matrix.M[1][1] = f;
 	projection_matrix.M[2][2] = (this->far_plane + this->near_plane) / (this->near_plane - this->far_plane);
-	projection_matrix.M[2][3] = 2 * ((this->far_plane * this->near_plane) / this->near_plane - this->far_plane);
-	projection_matrix.M[3][2] = -1;
+	projection_matrix.M[3][2] = 2 * ((this->far_plane * this->near_plane) / (this->near_plane - this->far_plane));
+	projection_matrix.M[2][3] = -1;
 
 	//update the viewprojection_matrix
 	viewprojection_matrix = view_matrix * projection_matrix;

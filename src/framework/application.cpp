@@ -44,6 +44,7 @@ void Application::init(void)
 	texture = new Image();
 	texture->loadTGA("color.tga");
 
+
 }
 
 //render one frame
@@ -53,8 +54,9 @@ void Application::render(Image& framebuffer)
 
 	//for every point of the mesh (to draw triangles take three points each time and connect the points between them (1,2,3,   4,5,6,   ... )
 
-	for (int i = 0; i < mesh->vertices.size(); i + 3)
+	for (int i = 0; i < mesh->vertices.size() - 3; i += 3)
 	{
+
 		Vector3 vertex1 = mesh->vertices[i]; //extract vertex from mesh
 		Vector3 vertex2 = mesh->vertices[i + 1]; //extract vertex from mesh
 		Vector3 vertex3 = mesh->vertices[i + 2]; //extract vertex from mesh
@@ -65,14 +67,20 @@ void Application::render(Image& framebuffer)
 		Vector3 normalized_point2 = camera->projectVector(vertex2);
 		Vector3 normalized_point3 = camera->projectVector(vertex3);
 
-
-		
 		//convert from normalized (-1 to +1) to framebuffer coordinates (0,W)
-		
+		int x1 = abs(normalized_point1.x)*framebuffer.width;
+		int y1 = abs(normalized_point2.y)*framebuffer.height;
+		int x2 = abs(normalized_point2.x)*framebuffer.width;
+		int y2 = abs(normalized_point2.y)*framebuffer.height;
+		int x3 = abs(normalized_point3.x)*framebuffer.width;
+		int y3 = abs(normalized_point3.y)*framebuffer.height;
+
+		if (y1 > framebuffer.height || y2 > framebuffer.height || y3 > framebuffer.height) {
+			std::cout << "hello";
+		}
 
 		//paint point in framebuffer (using setPixel or drawTriangle)
-		framebuffer.drawTriangle(abs(normalized_point1.x)*framebuffer.width, abs(normalized_point1.y)*framebuffer.height, abs(normalized_point2.x)*framebuffer.width, abs(normalized_point2.y)*framebuffer.height, 
-			abs(normalized_point3.x)*framebuffer.width, abs(normalized_point3.y)*framebuffer.height);
+		framebuffer.drawTriangle(x1, y1, x2, y2, x3, y3);
 	}
 	
 }
