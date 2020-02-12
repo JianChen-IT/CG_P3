@@ -299,20 +299,27 @@ void FloatImage::resize(unsigned int width, unsigned int height)
 	pixels = new_pixels;
 }
 
-void FloatImage::line(int x0, int y0, int x1, int y1) {
+void Image::line(int x0, int y0, int x1, int y1) {
 
 	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
 	int err = (dx > dy ? dx : -dy) / 2, e2;
 	float v;
 	for (;;) {
-		v = getPixel(x0, y0);
-		setPixel(x0, y0, v);
+		setPixel(x0, y0, Color(255,255,255));
 		if (x0 == x1 && y0 == y1) break;
 		e2 = err;
 		if (e2 > -dx) { err -= dy; x0 += sx; }
 		if (e2 < dy) { err += dx; y0 += sy; }
 	}
+}
+
+void Image::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
+
+		line(x1, y1, x2, y2);
+		line(x1, y1, x3, y3);
+		line(x2, y2, x3, y3);
+
 }
 
 #ifndef IGNORE_LAMBDAS

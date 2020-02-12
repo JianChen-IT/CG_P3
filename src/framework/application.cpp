@@ -43,6 +43,7 @@ void Application::init(void)
 	//load the texture
 	texture = new Image();
 	texture->loadTGA("color.tga");
+
 }
 
 //render one frame
@@ -51,21 +52,29 @@ void Application::render(Image& framebuffer)
 	framebuffer.fill(Color(40, 45, 60 )); //clear
 
 	//for every point of the mesh (to draw triangles take three points each time and connect the points between them (1,2,3,   4,5,6,   ... )
-	for (int i = 0; i < mesh->vertices.size(); i++)
+
+	for (int i = 0; i < mesh->vertices.size(); i + 3)
 	{
-		Vector3 vertex = mesh->vertices[i]; //extract vertex from mesh
+		Vector3 vertex1 = mesh->vertices[i]; //extract vertex from mesh
+		Vector3 vertex2 = mesh->vertices[i + 1]; //extract vertex from mesh
+		Vector3 vertex3 = mesh->vertices[i + 2]; //extract vertex from mesh
 		Vector2 texcoord = mesh->uvs[i]; //texture coordinate of the vertex (they are normalized, from 0,0 to 1,1)
 
 		//project every point in the mesh to normalized coordinates using the viewprojection_matrix inside camera
-		//Vector3 normalized_point = camera->projectVector(vertex);
+		Vector3 normalized_point1 = camera->projectVector(vertex1);
+		Vector3 normalized_point2 = camera->projectVector(vertex2);
+		Vector3 normalized_point3 = camera->projectVector(vertex3);
 
-		//framebuffer.setPixelSafe(15*vertex.x+400, 15*vertex.y+300, Color(250,250,250));
+
+		
 		//convert from normalized (-1 to +1) to framebuffer coordinates (0,W)
-		//...
+		
 
 		//paint point in framebuffer (using setPixel or drawTriangle)
-		//...
+		framebuffer.drawTriangle(abs(normalized_point1.x)*framebuffer.width, abs(normalized_point1.y)*framebuffer.height, abs(normalized_point2.x)*framebuffer.width, abs(normalized_point2.y)*framebuffer.height, 
+			abs(normalized_point3.x)*framebuffer.width, abs(normalized_point3.y)*framebuffer.height);
 	}
+	
 }
 
 //called after render
