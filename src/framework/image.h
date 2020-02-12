@@ -117,8 +117,8 @@ public:
 
 	//set the pixel at position x,y with value C
 	inline void setPixel(unsigned int x, unsigned int y, const float& v) { pixels[y * width + x] = v; }
-
 	void resize(unsigned int width, unsigned int height);
+	void line(int x0, int y0, int x1, int y1);
 };
 
 

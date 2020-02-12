@@ -43,14 +43,12 @@ public:
 	void onMouseButtonDown( SDL_MouseButtonEvent event );
 	void onMouseButtonUp( SDL_MouseButtonEvent event );
 
-	void onWindowResize(int width, int height);
-
 	//other methods to control the app
 	void setWindowSize(int width, int height) {
 		glViewport( 0,0, width, height );
 		this->window_width = width;
 		this->window_height = height;
-		this->onWindowResize(width, height);
+		framebuffer.resize(width, height);
 	}
 
 	Vector2 getWindowSize()

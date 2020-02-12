@@ -285,8 +285,6 @@ FloatImage::~FloatImage()
 //change image size (the old one will remain in the top-left corner)
 void FloatImage::resize(unsigned int width, unsigned int height)
 {
-	if (this->width == width && this->height == height)
-		return; //nothing to do
 	float* new_pixels = new float[width*height];
 	unsigned int min_width = this->width > width ? width : this->width;
 	unsigned int min_height = this->height > height ? height : this->height;
@@ -301,6 +299,21 @@ void FloatImage::resize(unsigned int width, unsigned int height)
 	pixels = new_pixels;
 }
 
+void FloatImage::line(int x0, int y0, int x1, int y1) {
+
+	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	int err = (dx > dy ? dx : -dy) / 2, e2;
+	float v;
+	for (;;) {
+		v = getPixel(x0, y0);
+		setPixel(x0, y0, v);
+		if (x0 == x1 && y0 == y1) break;
+		e2 = err;
+		if (e2 > -dx) { err -= dy; x0 += sx; }
+		if (e2 < dy) { err += dx; y0 += sy; }
+	}
+}
 
 #ifndef IGNORE_LAMBDAS
 

@@ -2,7 +2,6 @@
 #include "utils.h"
 #include "image.h"
 #include "mesh.h"
-#include <algorithm>
 
 Mesh* mesh = NULL;
 Camera* camera = NULL;
@@ -46,86 +45,25 @@ void Application::init(void)
 	texture->loadTGA("color.tga");
 }
 
-//this function fills the triangle by computing the bounding box of the triangle in screen space and using the barycentric interpolation
-//to check which pixels are inside the triangle. It is slow for big triangles, but faster for small triangles
-void fillTriangle(Image& colorbuffer, const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector2& uv0, const Vector2& uv1, const Vector2& uv2, Image* texture = NULL, FloatImage* zbuffer = NULL)
-{
-	//compute triangle bounding box in screen space
-	Vector3 min_, max_;
-	computeMinMax(p0, p1, p2, min_, max_);
-	//clamp to screen area
-	min_ = clamp(min_, Vector3(0, 0, -1), Vector3(colorbuffer.width-1, colorbuffer.height-1, 1));
-	max_ = clamp(max_, Vector3(0, 0, -1), Vector3(colorbuffer.width-1, colorbuffer.height-1, 1));
-
-	//this avoids strange artifacts if the triangle is too big, just ignore this line
-	if ((min_.x == 0.0 && max_.x == colorbuffer.width - 1) || (min_.y == 0.0 && max_.y == colorbuffer.height - 1))
-		return;
-
-	//we must compute the barycentrinc interpolation coefficients
-	//we precompute some of them outside of loop to speed up (because they are constant)
-	Vector3 v0 = p1 - p0;
-	Vector3 v1 = p2 - p0;
-	float d00 = v0.dot(v0);
-	float d01 = v0.dot(v1);
-	float d11 = v1.dot(v1);
-	float denom = d00 * d11 - d01 * d01;
-
-	//loop all pixels inside bounding box
-	for (int x = min_.x; x < max_.x; ++x)
-	{
-		#pragma omp parallel for //HACK: this is to execute loop iterations in parallel in multiple cores, should go faster (search openmp in google for more info)
-		for (int y = min_.y; y < max_.y; ++y)
-		{
-			Vector3 P(x, y, 0);
-			Vector3 v2 = P - p0; //P is the x,y of the pixel
-
-			//computing all weights of pixel P(x,y)
-			float d20 = v2.dot(v0);
-			float d21 = v2.dot(v1);
-			float v = (d11 * d20 - d01 * d21) / denom;
-			float w = (d00 * d21 - d01 * d20) / denom;
-			float u = 1.0 - v - w;
-			//check if pixel is inside or outside the triangle
-			if (u < 0 || u > 1 || v < 0 || v > 1 || w < 0 || w > 1)
-				continue; //if it is outside, skip to next
-
-			//here add your code to test occlusions based on the Z of the vertices and the pixel
-			//...
-
-			//here add your code to compute the color of the pixel
-			//...
-
-			//draw the pixels in the colorbuffer x,y position
-			colorbuffer.setPixel( x, y, Color::WHITE );
-		}
-	}
-}
-
 //render one frame
 void Application::render(Image& framebuffer)
 {
 	framebuffer.fill(Color(40, 45, 60 )); //clear
 
-	//remember, you must modify the code in Camera::updateProjectionMatrix and Camera::updateViewMatrix to take into account changes in the camera
-
 	//for every point of the mesh (to draw triangles take three points each time and connect the points between them (1,2,3,   4,5,6,   ... )
-	for (unsigned int i = 0; i < mesh->vertices.size(); i+=3)
+	for (int i = 0; i < mesh->vertices.size(); i++)
 	{
-		Vector3 v0 = mesh->vertices[i]; //extract vertex from mesh
-		Vector3 v1 = mesh->vertices[i+1]; //extract vertex from mesh
-		Vector3 v2 = mesh->vertices[i+2]; //extract vertex from mesh
-
-		Vector2 uv0 = mesh->uvs[i]; //texture coordinate of the vertex (they are normalized, from 0,0 to 1,1)
-		Vector2 uv1 = mesh->uvs[i+1]; //texture coordinate of the vertex (they are normalized, from 0,0 to 1,1)
-		Vector2 uv2 = mesh->uvs[i+2]; //texture coordinate of the vertex (they are normalized, from 0,0 to 1,1)
+		Vector3 vertex = mesh->vertices[i]; //extract vertex from mesh
+		Vector2 texcoord = mesh->uvs[i]; //texture coordinate of the vertex (they are normalized, from 0,0 to 1,1)
 
 		//project every point in the mesh to normalized coordinates using the viewprojection_matrix inside camera
-		//you can use: projected_vertex = camera->projectVector(vertex);
+		//Vector3 normalized_point = camera->projectVector(vertex);
 
-		//convert from normalized (-1 to +1) to framebuffer coordinates (0..W,0..H)
+		//framebuffer.setPixelSafe(15*vertex.x+400, 15*vertex.y+300, Color(250,250,250));
+		//convert from normalized (-1 to +1) to framebuffer coordinates (0,W)
 		//...
 
-		//paint point in framebuffer (using the fillTriangle function)
+		//paint point in framebuffer (using setPixel or drawTriangle)
 		//...
 	}
 }
@@ -133,6 +71,11 @@ void Application::render(Image& framebuffer)
 //called after render
 void Application::update(double seconds_elapsed)
 {
+	if (keystate[SDL_SCANCODE_SPACE])
+	{
+		//...
+	}
+
 	//example to move eye
 	if (keystate[SDL_SCANCODE_LEFT])
 		camera->eye.x -= 5 * seconds_elapsed;
@@ -150,14 +93,15 @@ void Application::onKeyDown( SDL_KeyboardEvent event )
 	switch(event.keysym.sym)
 	{
 		case SDLK_ESCAPE: exit(0); break; //ESC key, kill the app
-		default: break;
 	}
 }
 
 //keyboard released event 
 void Application::onKeyUp(SDL_KeyboardEvent event)
 {
-	//check onKeyDown to know how to use it
+	switch (event.keysym.sym)
+	{
+	}
 }
 
 //mouse button event
@@ -175,14 +119,6 @@ void Application::onMouseButtonUp( SDL_MouseButtonEvent event )
 	{
 
 	}
-}
-
-//executed when the windows changes its size
-void Application::onWindowResize(int width, int height)
-{
-	framebuffer.resize(width, height);
-	//something else should be resized?
-	//...
 }
 
 //when the app starts
