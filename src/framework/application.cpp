@@ -6,7 +6,6 @@
 Mesh* mesh = NULL;
 Camera* camera = NULL;
 Image* texture = NULL;
-
 Application::Application(const char* caption, int width, int height)
 {
 	this->window = createWindow(caption, width, height);
@@ -22,6 +21,7 @@ Application::Application(const char* caption, int width, int height)
 	this->keystate = SDL_GetKeyboardState(NULL);
 
 	framebuffer.resize(w, h);
+	Z_buffer.resize(w, h);
 }
 
 //Here we have already GL working, so we can create meshes and textures
@@ -34,12 +34,12 @@ void Application::init(void)
 	camera = new Camera();
 	camera->lookAt(Vector3(0,10,20),Vector3(0,10,0),Vector3(0,1,0)); //define eye,center,up
 	camera->perspective(60, window_width / (float)window_height, 0.1, 10000); //define fov,aspect,near,far
-
+	
 	//load a mesh
 	mesh = new Mesh();
 	if( !mesh->loadOBJ("lee.obj") )
 		std::cout << "FILE Lee.obj NOT FOUND" << std::endl;
-
+	Z_buffer.fill(FLT_MAX);
 	//load the texture
 	texture = new Image();
 	texture->loadTGA("color.tga");
@@ -47,6 +47,9 @@ void Application::init(void)
 
 }
 
+float dist(float coor) {
+	return (1 - coor) / 2;
+}
 //render one frame
 void Application::render(Image& framebuffer)
 {
@@ -67,20 +70,18 @@ void Application::render(Image& framebuffer)
 		Vector3 normalized_point2 = camera->projectVector(vertex2);
 		Vector3 normalized_point3 = camera->projectVector(vertex3);
 
-		//convert from normalized (-1 to +1) to framebuffer coordinates (0,W)
-		int x1 = abs(normalized_point1.x)*framebuffer.width;
-		int y1 = abs(normalized_point2.y)*framebuffer.height;
-		int x2 = abs(normalized_point2.x)*framebuffer.width;
-		int y2 = abs(normalized_point2.y)*framebuffer.height;
-		int x3 = abs(normalized_point3.x)*framebuffer.width;
-		int y3 = abs(normalized_point3.y)*framebuffer.height;
 
-		if (y1 > framebuffer.height || y2 > framebuffer.height || y3 > framebuffer.height) {
-			std::cout << "hello";
-		}
+		//convert from normalized (-1 to +1) to framebuffer coyordinates (0,W)
+		int x1 =  (dist(normalized_point1.x) + normalized_point1.x)*framebuffer.width; //+ framebuffer.width/2;
+		int y1 =  (dist(normalized_point1.y) + normalized_point1.y)*framebuffer.height;// + framebuffer.height/2;
+		int x2 =  (dist(normalized_point2.x) + normalized_point2.x)*framebuffer.width;// +framebuffer.width / 2;
+		int y2 =  (dist(normalized_point2.y) + normalized_point2.y)*framebuffer.height;// +framebuffer.height / 2;
+		int x3 =  (dist(normalized_point3.x) + normalized_point3.x)*framebuffer.width;// +framebuffer.width / 2;
+		int y3 =  (dist(normalized_point3.y) + normalized_point3.y)*framebuffer.height;// +framebuffer.height / 2;
+
 
 		//paint point in framebuffer (using setPixel or drawTriangle)
-		framebuffer.drawTriangle(x1, y1, x2, y2, x3, y3);
+		framebuffer.drawTriangle(x1, y1, x2, y2, x3, y3,Color(255,255,255),true,0);
 	}
 	
 }

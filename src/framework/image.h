@@ -74,9 +74,8 @@ public:
 	bool saveTGA(const char* filename);
 
 
-	void line(int x0, int y0, int x1, int y1);
-	void Image::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3);
-
+	void line(int x0, int y0, int x1, int y1, int** minMax, bool boolean);
+	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color& color, bool fill, float depth);
 	//used to easy code
 	#ifndef IGNORE_LAMBDAS
 

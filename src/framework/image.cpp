@@ -299,7 +299,7 @@ void FloatImage::resize(unsigned int width, unsigned int height)
 	pixels = new_pixels;
 }
 
-void Image::line(int x0, int y0, int x1, int y1) {
+void Image::line(int x0, int y0, int x1, int y1, int ** minMax, bool boolean) {
 
 	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
@@ -307,21 +307,106 @@ void Image::line(int x0, int y0, int x1, int y1) {
 	float v;
 	for (;;) {
 		setPixel(x0, y0, Color(255,255,255));
+		if (boolean)
+		{
+			if (x0 <= minMax[y0][0])
+			{
+				minMax[y0][0] = x0;
+			}
+
+			if (x0 >= minMax[y0][1])
+			{
+				minMax[y0][1] = x0;
+			}
+		}
 		if (x0 == x1 && y0 == y1) break;
 		e2 = err;
 		if (e2 > -dx) { err -= dy; x0 += sx; }
 		if (e2 < dy) { err += dx; y0 += sy; }
 	}
-}
 
-void Image::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
 
-		line(x1, y1, x2, y2);
-		line(x1, y1, x3, y3);
-		line(x2, y2, x3, y3);
 
 }
 
+double area(int x1, int y1, int x2, int y2, int x3, int y3) {
+	return abs((x1*(y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0);
+}
+void Image::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color& color, bool fill, float depth) {
+
+
+	if (fill == false)
+	{
+		line(x1, y1, x2, y2,  NULL, false);
+		line(x1, y1, x3, y3,  NULL, false);
+		line(x2, y2, x3, y3,  NULL, false);
+	}
+	else
+	{
+		// Creating the array to store the edges of the triangle for each pixel row
+		int** minMax = new int*[this->height];
+		for (int i = 0; i < this->height; i++)
+			minMax[i] = new int[2];
+
+		// MinMax initialization
+		for (int i = 0; i < this->height; i++)
+		{
+			minMax[i][0] = this->width + 1;
+			minMax[i][1] = -1;
+		}
+
+		bool interpolated = true;
+
+
+		line(x1, y1, x2, y2,  minMax, true);
+		line(x1, y1, x3, y3,  minMax, true);
+		line(x2, y2, x3, y3,  minMax, true);
+
+
+		// Filling the triangle with minMax
+
+		if (interpolated)
+		{
+			/*Going from bottom to top*/
+			for (int i = 0; i < this->height; i++)
+			{
+				/*Iterate from minimum to maximum and compute the partial area.
+				The color output will be the ratio of each partial area to the total area*/
+				if (minMax[i][0] <= minMax[i][1])
+				{
+					for (int j = minMax[i][0]; j <= minMax[i][1]; j++)
+					{
+						float totalArea = area(x1, y1, x2, y2, x3, y3);
+						float partialArea1 = area(j, i, x2, y2, x3, y3) / totalArea;
+						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
+						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
+						setPixelSafe(j, i, Color(255 * partialArea1, 255 * partialArea2, 255 * partialArea3));
+
+					}
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < this->height; i++)
+			{
+				if (minMax[i][0] <= minMax[i][1])
+				{
+					for (int j = minMax[i][0]; j < minMax[i][1]; j++) {
+						setPixel(j, i, Color(255, 255, 255));
+					}
+				}
+			}
+		}
+
+
+		// Deallocating the minMax array
+		for (int i = 0; i < this->height; i++)
+			delete[] minMax[i];
+		delete[] minMax;
+	}
+
+}
 #ifndef IGNORE_LAMBDAS
 
 //you can apply and algorithm for two images and store the result in the first one

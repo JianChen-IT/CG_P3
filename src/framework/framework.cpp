@@ -453,7 +453,7 @@ bool Matrix44::inverse()
          return false;
 	  }
 #undef MATRIX_SINGULAR_THRESHOLD
-
+	  
       t = 1.0f/temp.M[i][i];
 
       for (k = 0; k < n; k++)//m or n
