@@ -90,7 +90,7 @@ Image Image::getArea(unsigned int start_x, unsigned int start_y, unsigned int wi
 		for(unsigned int y = 0; y < height; ++x)
 		{
 			if( (x + start_x) < this->width && (y + start_y) < this->height) 
-				result.setPixel( x, y, getPixel(x + start_x,y + start_y) );
+				result.setPixelSafe( x, y, getPixel(x + start_x,y + start_y) );
 		}
 	return result;
 }
@@ -101,8 +101,8 @@ void Image::flipX()
 		for(unsigned int y = 0; y < height; ++y)
 		{
 			Color temp = getPixel(width - x - 1, y);
-			setPixel( width - x - 1, y, getPixel(x,y));
-			setPixel( x, y, temp );
+			setPixelSafe( width - x - 1, y, getPixel(x,y));
+			setPixelSafe( x, y, temp );
 		}
 }
 
@@ -112,8 +112,8 @@ void Image::flipY()
 		for(unsigned int y = 0; y < height * 0.5; ++y)
 		{
 			Color temp = getPixel(x, height - y - 1);
-			setPixel( x, height - y - 1, getPixel(x,y) );
-			setPixel( x, y, temp );
+			setPixelSafe( x, height - y - 1, getPixel(x,y) );
+			setPixelSafe( x, y, temp );
 		}
 }
 
@@ -186,7 +186,7 @@ bool Image::loadTGA(const char* filename)
 		for(unsigned int x = 0; x < width; ++x)
 		{
 			unsigned int pos = y * width * bytesPerPixel + x * bytesPerPixel;
-			this->setPixel(x , height - y - 1, Color( tgainfo->data[pos+2], tgainfo->data[pos+1], tgainfo->data[pos]) );
+			this->setPixelSafe(x , height - y - 1, Color( tgainfo->data[pos+2], tgainfo->data[pos+1], tgainfo->data[pos]) );
 		}
 
 	delete tgainfo->data;
@@ -306,7 +306,7 @@ void Image::line(int x0, int y0, int x1, int y1, int ** minMax, bool boolean) {
 	int err = (dx > dy ? dx : -dy) / 2, e2;
 	float v;
 	for (;;) {
-		setPixel(x0, y0, Color(255,255,255));
+		setPixelSafe(x0, y0, Color(255,255,255));
 		if (boolean)
 		{
 			if (x0 <= minMax[y0][0])
@@ -393,7 +393,7 @@ void Image::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color& 
 				if (minMax[i][0] <= minMax[i][1])
 				{
 					for (int j = minMax[i][0]; j < minMax[i][1]; j++) {
-						setPixel(j, i, Color(255, 255, 255));
+						setPixelSafe(j, i, Color(255, 255, 255));
 					}
 				}
 			}

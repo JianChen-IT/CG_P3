@@ -72,12 +72,12 @@ void Application::render(Image& framebuffer)
 
 
 		//convert from normalized (-1 to +1) to framebuffer coyordinates (0,W)
-		int x1 =  (dist(normalized_point1.x) + normalized_point1.x)*framebuffer.width; //+ framebuffer.width/2;
-		int y1 =  (dist(normalized_point1.y) + normalized_point1.y)*framebuffer.height;// + framebuffer.height/2;
-		int x2 =  (dist(normalized_point2.x) + normalized_point2.x)*framebuffer.width;// +framebuffer.width / 2;
-		int y2 =  (dist(normalized_point2.y) + normalized_point2.y)*framebuffer.height;// +framebuffer.height / 2;
-		int x3 =  (dist(normalized_point3.x) + normalized_point3.x)*framebuffer.width;// +framebuffer.width / 2;
-		int y3 =  (dist(normalized_point3.y) + normalized_point3.y)*framebuffer.height;// +framebuffer.height / 2;
+		int x1 =  (dist(normalized_point1.x) + normalized_point1.x)*framebuffer.width;
+		int y1 =  (dist(normalized_point1.y) + normalized_point1.y)*framebuffer.height;
+		int x2 =  (dist(normalized_point2.x) + normalized_point2.x)*framebuffer.width;
+		int y2 =  (dist(normalized_point2.y) + normalized_point2.y)*framebuffer.height;
+		int x3 =  (dist(normalized_point3.x) + normalized_point3.x)*framebuffer.width;
+		int y3 =  (dist(normalized_point3.y) + normalized_point3.y)*framebuffer.height;
 
 
 		//paint point in framebuffer (using setPixel or drawTriangle)
@@ -95,15 +95,45 @@ void Application::update(double seconds_elapsed)
 	}
 
 	//example to move eye
-	if (keystate[SDL_SCANCODE_LEFT])
+	if (keystate[SDL_SCANCODE_S]) {
+		camera->center.y -= 5 * seconds_elapsed;
+		camera->eye.y -= 5 * seconds_elapsed;
+	}
+	if (keystate[SDL_SCANCODE_W]) {
+		camera->center.y += 5 * seconds_elapsed;
+		camera->eye.y += 5 * seconds_elapsed;
+	}
+	if (keystate[SDL_SCANCODE_A]) {
+		camera->center.x -= 5 * seconds_elapsed;
 		camera->eye.x -= 5 * seconds_elapsed;
-	if (keystate[SDL_SCANCODE_RIGHT])
+	}
+	if (keystate[SDL_SCANCODE_D]) {
+		camera->center.x += 5 * seconds_elapsed;
 		camera->eye.x += 5 * seconds_elapsed;
+	}
+	if (keystate[SDL_SCANCODE_DOWN]) {
+		camera->center.y -= 20 * seconds_elapsed;
+	}
+	if (keystate[SDL_SCANCODE_UP]) {
+		camera->center.y += 20 * seconds_elapsed;
+	}
+	if (keystate[SDL_SCANCODE_LEFT]) {
+		camera->center.x += 20 * seconds_elapsed;
+	}
+	if (keystate[SDL_SCANCODE_RIGHT]) {
+		camera->center.x -= 20 * seconds_elapsed;
+	}
+	if (keystate[SDL_SCANCODE_F]) {
+		camera->fov -= 20 * seconds_elapsed;
+	}
+	if (keystate[SDL_SCANCODE_G]) {
+		camera->fov += 20 * seconds_elapsed;
+	}
 
 	//if we modify the camera fields, then update matrices
-	camera->updateViewMatrix();
-	camera->updateProjectionMatrix();
-}
+	camera->lookAt(camera->eye, camera->center, camera->up);
+	camera->perspective(camera->fov, camera->aspect, camera->near_plane, camera->far_plane);
+}	
 
 //keyboard press event 
 void Application::onKeyDown( SDL_KeyboardEvent event )
