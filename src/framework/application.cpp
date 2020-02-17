@@ -4,8 +4,9 @@
 #include "mesh.h"
 
 Mesh* mesh = NULL;
-Camera* camera = NULL;
 Image* texture = NULL;
+Camera* camera = NULL;
+
 Application::Application(const char* caption, int width, int height)
 {
 	this->window = createWindow(caption, width, height);
@@ -74,14 +75,17 @@ void Application::render(Image& framebuffer)
 		//convert from normalized (-1 to +1) to framebuffer coyordinates (0,W)
 		int x1 =  (dist(normalized_point1.x) + normalized_point1.x)*framebuffer.width;
 		int y1 =  (dist(normalized_point1.y) + normalized_point1.y)*framebuffer.height;
+		int z1 = vertex1.z;
 		int x2 =  (dist(normalized_point2.x) + normalized_point2.x)*framebuffer.width;
 		int y2 =  (dist(normalized_point2.y) + normalized_point2.y)*framebuffer.height;
+		int z2 = vertex2.z;
 		int x3 =  (dist(normalized_point3.x) + normalized_point3.x)*framebuffer.width;
 		int y3 =  (dist(normalized_point3.y) + normalized_point3.y)*framebuffer.height;
+		int z3 = vertex3.z;
 
 
 		//paint point in framebuffer (using setPixel or drawTriangle)
-		framebuffer.drawTriangle(x1, y1, x2, y2, x3, y3,Color(255,255,255),true,0);
+		framebuffer.drawTriangle(x1, y1, z1, x2, y2, z2, x3, y3, z3, Color(255,255,255), true, camera, Z_buffer);
 	}
 	
 }

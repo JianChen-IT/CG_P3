@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "framework.h"
+#include "camera.h"
 
 //remove unsafe warnings
 #define _CRT_SECURE_NO_WARNINGS
@@ -75,7 +76,7 @@ public:
 
 
 	void line(int x0, int y0, int x1, int y1, int** minMax, bool boolean);
-	void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color& color, bool fill, float depth);
+	void drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, Color& color, bool fill, Camera* cam, FloatImage& depthbuffer);
 	//used to easy code
 	#ifndef IGNORE_LAMBDAS
 

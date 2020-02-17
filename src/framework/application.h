@@ -10,6 +10,8 @@
 #include "camera.h"
 #include "image.h"
 
+
+
 class Application
 {
 public:
@@ -21,6 +23,7 @@ public:
 	float time;
 	Image framebuffer;
 	FloatImage Z_buffer;
+
 
 
 	//keyboard state

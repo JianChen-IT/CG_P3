@@ -332,7 +332,7 @@ void Image::line(int x0, int y0, int x1, int y1, int ** minMax, bool boolean) {
 double area(int x1, int y1, int x2, int y2, int x3, int y3) {
 	return abs((x1*(y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0);
 }
-void Image::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color& color, bool fill, float depth) {
+void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3,  Color& color, bool fill, Camera* cam, FloatImage& depthbuffer) {
 
 
 	if (fill == false)
@@ -355,7 +355,7 @@ void Image::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color& 
 			minMax[i][1] = -1;
 		}
 
-		bool interpolated = true;
+		bool interpolated = false;
 
 
 		line(x1, y1, x2, y2,  minMax, true);
@@ -380,8 +380,14 @@ void Image::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color& 
 						float partialArea1 = area(j, i, x2, y2, x3, y3) / totalArea;
 						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
 						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
-						setPixelSafe(j, i, Color(255 * partialArea1, 255 * partialArea2, 255 * partialArea3));
 
+						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2, z3*partialArea3));
+
+						if (distanceZ < depthbuffer.getPixel(j, i))
+						{
+							depthbuffer.setPixel(j, i, distanceZ);
+							setPixelSafe(j, i, Color(255 * partialArea1, 255 * partialArea2, 255 * partialArea3));
+						}
 					}
 				}
 			}
@@ -393,7 +399,19 @@ void Image::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color& 
 				if (minMax[i][0] <= minMax[i][1])
 				{
 					for (int j = minMax[i][0]; j < minMax[i][1]; j++) {
-						setPixelSafe(j, i, Color(255, 255, 255));
+
+						float totalArea = area(x1, y1, x2, y2, x3, y3);
+						float partialArea1 = area(j, i, x2, y2, x3, y3) / totalArea;
+						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
+						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
+
+						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2, z3*partialArea3));
+
+						if (distanceZ < depthbuffer.getPixel(j, i))
+						{
+							depthbuffer.setPixel(j, i, distanceZ);
+							setPixelSafe(j, i, Color(0, 0, 0));
+						}
 					}
 				}
 			}
