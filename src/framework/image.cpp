@@ -306,7 +306,7 @@ void Image::line(int x0, int y0, int x1, int y1, int ** minMax, bool boolean) {
 	int err = (dx > dy ? dx : -dy) / 2, e2;
 	float v;
 	for (;;) {
-		setPixelSafe(x0, y0, Color(255,255,255));
+		//setPixelSafe(x0, y0, Color(255,255,255));
 		if (boolean)
 		{
 			if (x0 <= minMax[y0][0])
@@ -332,6 +332,7 @@ void Image::line(int x0, int y0, int x1, int y1, int ** minMax, bool boolean) {
 double area(int x1, int y1, int x2, int y2, int x3, int y3) {
 	return abs((x1*(y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0);
 }
+
 void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3,  Color& color, bool fill, Camera* cam, FloatImage& depthbuffer) {
 
 
@@ -362,7 +363,6 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 		line(x1, y1, x3, y3,  minMax, true);
 		line(x2, y2, x3, y3,  minMax, true);
 
-
 		// Filling the triangle with minMax
 
 		if (interpolated)
@@ -381,9 +381,9 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
 						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
 
-						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2, z3*partialArea3));
+						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2 + z3*partialArea3));
 
-						if (distanceZ < depthbuffer.getPixel(j, i))
+						if (distanceZ <= depthbuffer.getPixel(j, i))
 						{
 							depthbuffer.setPixel(j, i, distanceZ);
 							setPixelSafe(j, i, Color(255 * partialArea1, 255 * partialArea2, 255 * partialArea3));
@@ -405,12 +405,13 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
 						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
 
-						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2, z3*partialArea3));
+						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2 + z3*partialArea3));
+						float maxDist = 108400001701741831;
 
-						if (distanceZ < depthbuffer.getPixel(j, i))
+						if (distanceZ <= depthbuffer.getPixel(j, i))
 						{
 							depthbuffer.setPixel(j, i, distanceZ);
-							setPixelSafe(j, i, Color(0, 0, 0));
+							setPixelSafe(j, i, Color(255*(distanceZ/maxDist), 255*(distanceZ / maxDist), 255* (distanceZ / maxDist)));
 						}
 					}
 				}
