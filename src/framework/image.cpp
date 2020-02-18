@@ -299,7 +299,7 @@ void FloatImage::resize(unsigned int width, unsigned int height)
 	pixels = new_pixels;
 }
 
-void Image::line(int x0, int y0, int x1, int y1, int ** minMax, bool boolean) {
+void Image::line(int x0, int y0, int x1, int y1, int ** minMax, int minY, bool boolean) {
 
 	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
@@ -310,14 +310,13 @@ void Image::line(int x0, int y0, int x1, int y1, int ** minMax, bool boolean) {
 		if (boolean)
 		{
 			if (x0 >= 0 && y0 >= 0) {
-				if (x0 <= minMax[y0][0])
+				if (x0 <= minMax[y0-minY][0])
 				{
-					minMax[y0][0] = x0;
+					minMax[y0-minY][0] = x0;
 				}
-
-				if (x0 >= minMax[y0][1])
+				if (x0 >= minMax[y0-minY][1])
 				{
-					minMax[y0][1] = x0;
+					minMax[y0-minY][1] = x0;
 				}
 			}
 		}
@@ -341,50 +340,57 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 
 	if (fill == false)
 	{
-		line(x1, y1, x2, y2,  NULL, false);
-		line(x1, y1, x3, y3,  NULL, false);
-		line(x2, y2, x3, y3,  NULL, false);
+		line(x1, y1, x2, y2,  NULL, 0, false);
+		line(x1, y1, x3, y3,  NULL, 0, false);
+		line(x2, y2, x3, y3,  NULL, 0, false);
 	}
 	else
 	{
+
+		int yMax = max(y1, max(y2, y3));
+		int yMin = min(y1, min(y2, y3));
+
 		// Creating the array to store the edges of the triangle for each pixel row
-		int** minMax = new int*[this->height];
-		for (int i = 0; i < this->height; i++)
+		int** minMax = new int*[yMax-yMin+1];
+		for (int i = 0; i < yMax-yMin+1; i++)
 			minMax[i] = new int[2];
 
 		// MinMax initialization
-		for (int i = 0; i < this->height; i++)
+		for (int i = 0; i < yMax-yMin+1; i++)
 		{
 			minMax[i][0] = this->width + 1;
 			minMax[i][1] = -1;
 		}
 
-		bool interpolated = true;
+		bool interpolated = false;
 
+		
 
-		line(x1, y1, x2, y2,  minMax, true);
-		line(x1, y1, x3, y3,  minMax, true);
-		line(x2, y2, x3, y3,  minMax, true);
+		line(x1, y1, x2, y2,  minMax, yMin, true);
+		line(x1, y1, x3, y3,  minMax, yMin, true);
+		line(x2, y2, x3, y3,  minMax, yMin, true);
+
+		float totalArea = area(x1, y1, x2, y2, x3, y3);
+		
 
 		// Filling the triangle with minMax
 
 		if (interpolated)
 		{
 			/*Going from bottom to top*/
-			for (int i = 0; i < this->height; i++)
+			for (int i = yMin; i <= yMax; i++)
 			{
 				/*Iterate from minimum to maximum and compute the partial area.
 				The color output will be the ratio of each partial area to the total area*/
-				if (minMax[i][0] <= minMax[i][1])
+				if (minMax[i-yMin][0] <= minMax[i-yMin][1])
 				{
-					for (int j = minMax[i][0]; j <= minMax[i][1]; j++)
+					for (int j = minMax[i-yMin][0]; j <= minMax[i-yMin][1]; j++)
 					{
-						float totalArea = area(x1, y1, x2, y2, x3, y3);
 						float partialArea1 = area(j, i, x2, y2, x3, y3) / totalArea;
 						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
 						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
 
-						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2 + z3*partialArea3));
+						float distanceZ = abs(cam->eye.z - (z1*partialArea1/totalArea + z2 * partialArea2/totalArea + z3*partialArea3/totalArea));
 
 						if (distanceZ <= depthbuffer.getPixel(j, i))
 						{
@@ -398,24 +404,21 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 		}
 		else
 		{
-			for (int i = 0; i < this->height; i++)
+			for (int i = yMin; i <= yMax; i++)
 			{
-				if (minMax[i][0] <= minMax[i][1])
+				if (minMax[i-yMin][0] <= minMax[i-yMin][1])
 				{
-					for (int j = minMax[i][0]; j < minMax[i][1]; j++) {
-
-						float totalArea = area(x1, y1, x2, y2, x3, y3);
+					for (int j = minMax[i-yMin][0]; j <= minMax[i-yMin][1]; j++)
+					{
 						float partialArea1 = area(j, i, x2, y2, x3, y3) / totalArea;
 						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
 						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
-
-						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2 + z3*partialArea3));
-						float maxDist = 108400001701741831;
+						float distanceZ = abs(cam->eye.z - (z1*partialArea1 / totalArea + z2 * partialArea2 / totalArea + z3 * partialArea3 / totalArea));
 
 						if (distanceZ <= depthbuffer.getPixel(j, i))
 						{
 							depthbuffer.setPixel(j, i, distanceZ);
-							setPixelSafe(j, i, Color(255*(distanceZ/maxDist), 255*(distanceZ / maxDist), 255* (distanceZ / maxDist)));
+							setPixelSafe(j, i, Color(255,255,255));
 						}
 					}
 				}
@@ -424,7 +427,7 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 
 
 		// Deallocating the minMax array
-		for (int i = 0; i < this->height; i++)
+		for (int i = 0; i < yMax-yMin+1; i++)
 			delete[] minMax[i];
 		delete[] minMax;
 	}

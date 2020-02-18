@@ -71,7 +71,7 @@ void Application::render(Image& framebuffer)
 		Vector3 normalized_point2 = camera->projectVector(vertex2);
 		Vector3 normalized_point3 = camera->projectVector(vertex3);
 
-
+		
 		//convert from normalized (-1 to +1) to framebuffer coyordinates (0,W)
 		int x1 =  (dist(normalized_point1.x) + normalized_point1.x)*framebuffer.width;
 		int y1 =  (dist(normalized_point1.y) + normalized_point1.y)*framebuffer.height;
