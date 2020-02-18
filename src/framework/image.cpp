@@ -309,16 +309,19 @@ void Image::line(int x0, int y0, int x1, int y1, int ** minMax, bool boolean) {
 		//setPixelSafe(x0, y0, Color(255,255,255));
 		if (boolean)
 		{
-			if (x0 <= minMax[y0][0])
-			{
-				minMax[y0][0] = x0;
-			}
+			if (x0 >= 0 && y0 >= 0) {
+				if (x0 <= minMax[y0][0])
+				{
+					minMax[y0][0] = x0;
+				}
 
-			if (x0 >= minMax[y0][1])
-			{
-				minMax[y0][1] = x0;
+				if (x0 >= minMax[y0][1])
+				{
+					minMax[y0][1] = x0;
+				}
 			}
 		}
+		
 		if (x0 == x1 && y0 == y1) break;
 		e2 = err;
 		if (e2 > -dx) { err -= dy; x0 += sx; }
@@ -356,7 +359,7 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 			minMax[i][1] = -1;
 		}
 
-		bool interpolated = false;
+		bool interpolated = true;
 
 
 		line(x1, y1, x2, y2,  minMax, true);
@@ -391,6 +394,7 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 					}
 				}
 			}
+			
 		}
 		else
 		{

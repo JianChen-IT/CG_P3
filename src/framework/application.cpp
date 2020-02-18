@@ -102,36 +102,46 @@ void Application::update(double seconds_elapsed)
 	if (keystate[SDL_SCANCODE_S]) {
 		camera->center.y -= 5 * seconds_elapsed;
 		camera->eye.y -= 5 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 	if (keystate[SDL_SCANCODE_W]) {
 		camera->center.y += 5 * seconds_elapsed;
 		camera->eye.y += 5 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 	if (keystate[SDL_SCANCODE_A]) {
 		camera->center.x -= 5 * seconds_elapsed;
 		camera->eye.x -= 5 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 	if (keystate[SDL_SCANCODE_D]) {
 		camera->center.x += 5 * seconds_elapsed;
 		camera->eye.x += 5 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 	if (keystate[SDL_SCANCODE_DOWN]) {
 		camera->center.y -= 20 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 	if (keystate[SDL_SCANCODE_UP]) {
 		camera->center.y += 20 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 	if (keystate[SDL_SCANCODE_LEFT]) {
 		camera->center.x += 20 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 	if (keystate[SDL_SCANCODE_RIGHT]) {
 		camera->center.x -= 20 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 	if (keystate[SDL_SCANCODE_F]) {
 		camera->fov -= 20 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 	if (keystate[SDL_SCANCODE_G]) {
 		camera->fov += 20 * seconds_elapsed;
+		Z_buffer.fill(FLT_MAX);
 	}
 
 	//if we modify the camera fields, then update matrices
