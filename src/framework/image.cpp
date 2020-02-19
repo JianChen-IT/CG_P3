@@ -335,16 +335,16 @@ double area(int x1, int y1, int x2, int y2, int x3, int y3) {
 	return abs((x1*(y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0);
 }
 
-void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3,  Color& color, bool fill, Camera* cam, FloatImage& depthbuffer) {
+void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3,  Color& color, int fill, Camera* cam, FloatImage& depthbuffer, Image* texture, Vector2 texvex1, Vector2 texvex2, Vector2 texvex3) {
 
 
-	if (fill == false)
+	if (fill == 1)
 	{
 		line(x1, y1, x2, y2,  NULL, 0, false);
 		line(x1, y1, x3, y3,  NULL, 0, false);
 		line(x2, y2, x3, y3,  NULL, 0, false);
 	}
-	else
+	else if (fill == 2 || fill == 3)
 	{
 
 		int yMax = max(y1, max(y2, y3));
@@ -395,10 +395,24 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 						if (i >= depthbuffer.height) {
 							return;
 						}
+
 						if (distanceZ <= depthbuffer.getPixel(j, i))
 						{
 							depthbuffer.setPixel(j, i, distanceZ);
+							if(fill==2)
 							setPixelSafe(j, i, Color(255 * partialArea1, 255 * partialArea2, 255 * partialArea3));
+							else {
+								int x_pos = texvex1.x * partialArea1 + texvex2.x * partialArea2 + texvex3.x * partialArea3;
+								int y_pos = texvex1.y * partialArea1 + texvex2.y * partialArea2 + texvex3.y * partialArea3;
+								if (x_pos > texture->width) {
+									x_pos = texture->width;
+								}
+								if (y_pos > texture->height) {
+									y_pos = texture->height;
+								}
+								Color skinParticle = texture->getPixel(x_pos, y_pos);
+								setPixelSafe(j, i, skinParticle);
+							}
 						}
 					}
 				}

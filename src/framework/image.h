@@ -76,7 +76,7 @@ public:
 
 
 	void line(int x0, int y0, int x1, int y1, int** minMax, int minY, bool boolean);
-	void drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, Color& color, bool fill, Camera* cam, FloatImage& depthbuffer);
+	void drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, Color& color, int fill, Camera* cam, FloatImage& depthbuffer, Image* texture, Vector2 texvex1, Vector2 texvex2, Vector2 texvex3);
 	//used to easy code
 	#ifndef IGNORE_LAMBDAS
 
