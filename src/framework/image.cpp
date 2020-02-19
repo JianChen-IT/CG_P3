@@ -350,6 +350,7 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 		int yMax = max(y1, max(y2, y3));
 		int yMin = min(y1, min(y2, y3));
 
+
 		// Creating the array to store the edges of the triangle for each pixel row
 		int** minMax = new int*[yMax-yMin+1];
 		for (int i = 0; i < yMax-yMin+1; i++)
@@ -362,7 +363,7 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 			minMax[i][1] = -1;
 		}
 
-		bool interpolated = false;
+		bool interpolated = true;
 
 		
 
@@ -390,8 +391,10 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
 						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
 
-						float distanceZ = abs(cam->eye.z - (z1*partialArea1/totalArea + z2 * partialArea2/totalArea + z3*partialArea3/totalArea));
-
+						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2 + z3*partialArea3));
+						if (i >= depthbuffer.height) {
+							return;
+						}
 						if (distanceZ <= depthbuffer.getPixel(j, i))
 						{
 							depthbuffer.setPixel(j, i, distanceZ);
@@ -404,7 +407,7 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 		}
 		else
 		{
-			for (int i = yMin; i <= yMax; i++)
+			for (int i = yMin; i <= yMax; i++) 
 			{
 				if (minMax[i-yMin][0] <= minMax[i-yMin][1])
 				{
@@ -413,8 +416,10 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 						float partialArea1 = area(j, i, x2, y2, x3, y3) / totalArea;
 						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
 						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
-						float distanceZ = abs(cam->eye.z - (z1*partialArea1 / totalArea + z2 * partialArea2 / totalArea + z3 * partialArea3 / totalArea));
-
+						float distanceZ = abs(cam->eye.z - (z1*partialArea1  + z2 * partialArea2 + z3 * partialArea3));
+						if (i >= depthbuffer.height) {
+							return;
+						}
 						if (distanceZ <= depthbuffer.getPixel(j, i))
 						{
 							depthbuffer.setPixel(j, i, distanceZ);
