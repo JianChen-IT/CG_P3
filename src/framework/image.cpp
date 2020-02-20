@@ -298,29 +298,43 @@ void FloatImage::resize(unsigned int width, unsigned int height)
 	this->height = height;
 	pixels = new_pixels;
 }
-
-void Image::line(int x0, int y0, int x1, int y1, int ** minMax, int minY, bool boolean) {
+/*Bresenham algorithm provided in the practice*/
+void Image::line(int x0, int y0, int x1, int y1) {
 
 	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
 	int err = (dx > dy ? dx : -dy) / 2, e2;
 	float v;
 	for (;;) {
-		//setPixelSafe(x0, y0, Color(255,255,255));
+		setPixelSafe(x0, y0, Color(255,255,255));
+		if (x0 == x1 && y0 == y1) break;
+		e2 = err;
+		if (e2 > -dx) { err -= dy; x0 += sx; }
+		if (e2 < dy) { err += dx; y0 += sy; }
+	}
+}
+/*We use the line algorithm to compute min and max. However, the algorithm only has computational purposes*/
+void Image::minMaxSetter(int x0, int y0, int x1, int y1, int ** minMax, int minY, bool boolean) {
+
+	int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	int err = (dx > dy ? dx : -dy) / 2, e2;
+	float v;
+	for (;;) {
 		if (boolean)
 		{
 			if (x0 >= 0 && y0 >= 0) {
-				if (x0 <= minMax[y0-minY][0])
+				if (x0 <= minMax[y0 - minY][0])
 				{
-					minMax[y0-minY][0] = x0;
+					minMax[y0 - minY][0] = x0;
 				}
-				if (x0 >= minMax[y0-minY][1])
+				if (x0 >= minMax[y0 - minY][1])
 				{
-					minMax[y0-minY][1] = x0;
+					minMax[y0 - minY][1] = x0;
 				}
 			}
 		}
-		
+
 		if (x0 == x1 && y0 == y1) break;
 		e2 = err;
 		if (e2 > -dx) { err -= dy; x0 += sx; }
@@ -330,26 +344,27 @@ void Image::line(int x0, int y0, int x1, int y1, int ** minMax, int minY, bool b
 
 
 }
-
+/*Computes the area of a triangle*/
 double area(int x1, int y1, int x2, int y2, int x3, int y3) {
-	return abs((x1*(y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0);
+	return abs((x1*(y3 - y2) + x3 * (y2 - y1) + x2 * (y1 - y3)) / 2.0);
 }
 
-void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3,  Color& color, int fill, Camera* cam, FloatImage& depthbuffer, Image* texture, Vector2 texvex1, Vector2 texvex2, Vector2 texvex3) {
+void Image::drawTriangle(int x1, int y1, float z1, int x2, int y2, float z2, int x3, int y3, float z3, int fill, Camera* cam, FloatImage& depthbuffer, Image* texture, Vector2 texvex1, Vector2 texvex2, Vector2 texvex3) {
 
-
+	/*Case when the user does not want to paint the object.*/
 	if (fill == 1)
 	{
-		line(x1, y1, x2, y2,  NULL, 0, false);
-		line(x1, y1, x3, y3,  NULL, 0, false);
-		line(x2, y2, x3, y3,  NULL, 0, false);
+		line(x1, y1, x2, y2);
+		line(x1, y1, x3, y3);
+		line(x2, y2, x3, y3);
 	}
+	/*Cases with interpolation (2) or with the texture (3)*/
 	else if (fill == 2 || fill == 3)
 	{
-
+		/*These two variables are for optimization. We use it in the for loops to not go through all the framebuffer, but
+		only the interesting part*/
 		int yMax = max(y1, max(y2, y3));
 		int yMin = min(y1, min(y2, y3));
-
 
 		// Creating the array to store the edges of the triangle for each pixel row
 		int** minMax = new int*[yMax-yMin+1];
@@ -366,16 +381,15 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 		bool interpolated = true;
 
 		
+		/*setting minMax*/
+		minMaxSetter(x1, y1, x2, y2,  minMax, yMin, true);
+		minMaxSetter(x1, y1, x3, y3,  minMax, yMin, true);
+		minMaxSetter(x2, y2, x3, y3,  minMax, yMin, true);
 
-		line(x1, y1, x2, y2,  minMax, yMin, true);
-		line(x1, y1, x3, y3,  minMax, yMin, true);
-		line(x2, y2, x3, y3,  minMax, yMin, true);
-
-		float totalArea = area(x1, y1, x2, y2, x3, y3);
+		double totalArea = area(x1, y1, x2, y2, x3, y3);
 		
 
 		// Filling the triangle with minMax
-
 		if (interpolated)
 		{
 			/*Going from bottom to top*/
@@ -387,38 +401,44 @@ void Image::drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3,
 				{
 					for (int j = minMax[i-yMin][0]; j <= minMax[i-yMin][1]; j++)
 					{
-						float partialArea1 = area(j, i, x2, y2, x3, y3) / totalArea;
-						float partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
-						float partialArea3 = area(x1, y1, x2, y2, j, i) / totalArea;
-
+						double partialArea1 = area(j, i, x2, y2, x3, y3) / totalArea;
+						double partialArea2 = area(x1, y1, j, i, x3, y3) / totalArea;
+						double partialArea3 = 1 - partialArea1 - partialArea2;
+						/*Check that the points are within the triangle, if not then skip this iteration*/
+						if (partialArea1 > 1 || partialArea2 > 1 || partialArea3 > 1 || partialArea1 < 0 || partialArea2 < 0 || partialArea3 < 0) {
+							continue;
+						}
+						/*computing the distance between the eye and the interpolated z*/
 						float distanceZ = abs(cam->eye.z - (z1*partialArea1 + z2 * partialArea2 + z3*partialArea3));
+
+						/*This conditions deals with a special case, because it crashes if it touches the top side of the screen.*/
 						if (i >= depthbuffer.height) {
 							return;
 						}
-
+						/*Using the z-buffer to decide what to color*/
 						if (distanceZ <= depthbuffer.getPixel(j, i))
 						{
 							depthbuffer.setPixel(j, i, distanceZ);
-							if(fill==2)
-							setPixelSafe(j, i, Color(255 * partialArea1, 255 * partialArea2, 255 * partialArea3));
-							else {
+							/*Interpolated case*/
+							if (fill == 2) {
+								setPixelSafe(j, i, Color(255 * partialArea1, 255 * partialArea2, 255 * partialArea3));
+							}
+							/*Texture case*/
+							else if (fill==3) {
+								/*We must compute the interpolation to have the most accurate color possible from the texture*/
 								int x_pos = texvex1.x * partialArea1 + texvex2.x * partialArea2 + texvex3.x * partialArea3;
 								int y_pos = texvex1.y * partialArea1 + texvex2.y * partialArea2 + texvex3.y * partialArea3;
-								if (x_pos > texture->width) {
-									x_pos = texture->width;
-								}
-								if (y_pos > texture->height) {
-									y_pos = texture->height;
-								}
 								Color skinParticle = texture->getPixel(x_pos, y_pos);
 								setPixelSafe(j, i, skinParticle);
 							}
+							
 						}
 					}
 				}
 			}
 			
 		}
+		/*This case only fills the white color to the object, but it follows the same idea of cases 2 and 3*/
 		else
 		{
 			for (int i = yMin; i <= yMax; i++) 

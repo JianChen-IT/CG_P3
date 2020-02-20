@@ -75,8 +75,9 @@ public:
 	bool saveTGA(const char* filename);
 
 
-	void line(int x0, int y0, int x1, int y1, int** minMax, int minY, bool boolean);
-	void drawTriangle(int x1, int y1, int z1, int x2, int y2, int z2, int x3, int y3, int z3, Color& color, int fill, Camera* cam, FloatImage& depthbuffer, Image* texture, Vector2 texvex1, Vector2 texvex2, Vector2 texvex3);
+	void line(int x0, int y0, int x1, int y1);
+	void drawTriangle(int x1, int y1, float z1, int x2, int y2, float z2, int x3, int y3, float z3, int fill, Camera* cam, FloatImage& depthbuffer, Image* texture, Vector2 texvex1, Vector2 texvex2, Vector2 texvex3);
+	void Image::minMaxSetter(int x0, int y0, int x1, int y1, int ** minMax, int minY, bool boolean);
 	//used to easy code
 	#ifndef IGNORE_LAMBDAS
 
